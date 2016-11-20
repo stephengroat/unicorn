@@ -4,7 +4,7 @@
 
 #include "unicorn_test.h"
 
-#if defined(_MSC_VER) || defined(MSVCRT)
+#ifdef _WIN64
 #undef PRId64
 #define PRId64 "I64d"
 #undef PRIu64

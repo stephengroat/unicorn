@@ -4,6 +4,14 @@
 
 #include "unicorn_test.h"
 
+if defined(_MSC_VER) || defined(MSVCRT)
+undef PRId64
+define PRId64 "I64d"
+undef PRIu64
+define PRIu64 "I64u"
+undef PRIx64
+define PRIx64 "I64x"
+endif
 
 #define OK(x)   uc_assert_success(x)
 

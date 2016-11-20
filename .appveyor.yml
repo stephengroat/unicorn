@@ -2,7 +2,7 @@
 environment:
     CYG_MIRROR: http://cygwin.mirror.constant.com
     CYG_PACKAGES: make,gcc-core,clang,pkg-config,libpcre-devel,libglib2.0-devel,cmake,python-setuptools,ruby,mingw64-i686-gcc-core,mingw64-x86_64-gcc-core
-    MSYS_PACKAGES: mingw-w64-x86_64-glib2 mingw-w64-i686-glib2 cmake
+    MSYS_PACKAGES: mingw-w64-x86_64-glib2 mingw-w64-i686-glib2 mingw-w64-x86_64-cmake mingw-w64-i686-cmake cmake
     matrix:
         - MSYSTEM: MINGW64
           BASH: C:\msys64\usr\bin\bash
@@ -33,7 +33,7 @@ clone_depth: 1
 init:
     - git config --global core.autocrlf input
 # Allows RDP
-#    - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+    - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 # Install needed build dependencies
 install:
@@ -47,8 +47,8 @@ build_script:
     # make test
     #- 'cd %APPVEYOR_BUILD_FOLDER% && cd bindings\dotnet && msbuild UnicornDotNet.sln'
 # Allows RDP
-#on_finish:
-#    - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+on_finish:
+    - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 # Test cygwin only
 #

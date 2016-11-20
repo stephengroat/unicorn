@@ -43,7 +43,7 @@ static void test_basic_blocks_hook(uc_engine *uc, uint64_t address, uint32_t siz
     struct bbtest *bbtest = user_data;
     const struct bb *bb = &bbtest->blocks[bbtest->blocknum];
 
-    printf("block hook 1: %d == %zu\n", size, bb->size);
+    printf("block hook 1: %d == %"PRIu64"\n", size, bb->size);
     assert_int_equal(address, bb->addr);
     assert_int_equal((size_t)size, bb->size);
 }
@@ -53,7 +53,7 @@ static void test_basic_blocks_hook2(uc_engine *uc, uint64_t address, uint32_t si
     struct bbtest *bbtest = user_data;
     const struct bb *bb = &bbtest->blocks[bbtest->blocknum++];
 
-    printf("block hook 2: %d == %zu\n", size, bb->size);
+    printf("block hook 2: %d == %"PRIu64"\n", size, bb->size);
     assert_int_equal(address, bb->addr);
     assert_int_equal((size_t)size, bb->size);
 }

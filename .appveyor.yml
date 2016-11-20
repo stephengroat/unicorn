@@ -2,7 +2,7 @@
 environment:
     CYG_MIRROR: http://cygwin.mirror.constant.com
     CYG_PACKAGES: make,gcc-core,clang,pkg-config,libpcre-devel,libglib2.0-devel,cmake,python-setuptools,ruby,mingw64-i686-gcc-core,mingw64-x86_64-gcc-core
-    MSYS_PACKAGES: mingw-w64-x86_64-glib2 mingw-w64-i686-glib2 mingw-w64-x86_64-cmake mingw-w64-i686-cmake cmake
+    MSYS_PACKAGES: mingw-w64-x86_64-glib2 mingw-w64-i686-glib2 mingw-w64-x86_64-cmake mingw-w64-i686-cmake mingw-w64-x86_64-doxygen mingw-w64-i686-doxygen mingw-w64-x86_64-nsis mingw-w64-i686-nsis cmake
     matrix:
         - MSYSTEM: MINGW64
           BASH: C:\msys64\usr\bin\bash
@@ -53,4 +53,4 @@ on_finish:
 # Test cygwin only
 #
 test_script:
-    - if defined CYG_ROOT (%BASH% -lc "cd $APPVEYOR_BUILD_FOLDER && ./install-cmocka-linux.sh && export PATH=$PATH:$APPVEYOR_BUILD_FOLDER:$APPVEYOR_BUILD_FOLDER/cmocka/src && make test")
+    - if defined BASH (%BASH% -lc "cd $APPVEYOR_BUILD_FOLDER && ./install-cmocka-linux.sh && export PATH=$PATH:$APPVEYOR_BUILD_FOLDER:$APPVEYOR_BUILD_FOLDER/cmocka/src && make test")

@@ -61,7 +61,7 @@ V ?= 0
 ifeq ($(UNICORN_DEBUG),yes)
 CFLAGS += -g
 else
-CFLAGS += -O3
+CFLAGS += -Wall -Werror -Wextra -O3
 UNICORN_QEMU_FLAGS += --disable-debug-info
 endif
 

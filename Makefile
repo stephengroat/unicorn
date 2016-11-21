@@ -194,7 +194,7 @@ qemu/config-host.h-timestamp:
 	./configure --cc="${CC}" --extra-cflags="$(UNICORN_CFLAGS)" --target-list="$(UNICORN_TARGETS)" ${UNICORN_QEMU_FLAGS}
 	printf "$(UNICORN_ARCHS)" > config.log
 	$(MAKE) -C qemu -j 4
-	$(eval UC_TARGET_OBJ += $$(shell find qemu/ -name "*.o" 2>dev/null))
+	$(eval UC_TARGET_OBJ += $$(shell find qemu/ -name "*.o" 2>/dev/null))
 
 unicorn: $(LIBRARY) $(ARCHIVE)
 

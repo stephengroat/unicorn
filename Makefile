@@ -10,33 +10,23 @@ include pkgconfig.mk	# package version
 LIBNAME = unicorn
 UNAME_S := $(shell uname -s)
 
-GENOBJ = $(shell find qemu/$(1) -name "*.o" 2>/dev/null) 
-
 ifneq (,$(findstring x86,$(UNICORN_ARCHS)))
-	UC_TARGET_OBJ += $(call GENOBJ,x86_64-softmmu)
 	UNICORN_CFLAGS += -DUNICORN_HAS_X86
 	UNICORN_TARGETS += x86_64-softmmu,
 endif
 ifneq (,$(findstring arm,$(UNICORN_ARCHS)))
-	UC_TARGET_OBJ += $(call GENOBJ,arm-softmmu)
 	UNICORN_CFLAGS += -DUNICORN_HAS_ARM
 	UNICORN_TARGETS += arm-softmmu,
 endif
 ifneq (,$(findstring m68k,$(UNICORN_ARCHS)))
-	UC_TARGET_OBJ += $(call GENOBJ,m68k-softmmu)
 	UNICORN_CFLAGS += -DUNICORN_HAS_M68K
 	UNICORN_TARGETS += m68k-softmmu,
 endif
 ifneq (,$(findstring aarch64,$(UNICORN_ARCHS)))
-	UC_TARGET_OBJ += $(call GENOBJ,aarch64-softmmu)
 	UNICORN_CFLAGS += -DUNICORN_HAS_ARM64
 	UNICORN_TARGETS += aarch64-softmmu,
 endif
 ifneq (,$(findstring mips,$(UNICORN_ARCHS)))
-	UC_TARGET_OBJ += $(call GENOBJ,mips-softmmu)
-	UC_TARGET_OBJ += $(call GENOBJ,mipsel-softmmu)
-	UC_TARGET_OBJ += $(call GENOBJ,mips64-softmmu)
-	UC_TARGET_OBJ += $(call GENOBJ,mips64el-softmmu)
 	UNICORN_CFLAGS += -DUNICORN_HAS_MIPS
 	UNICORN_CFLAGS += -DUNICORN_HAS_MIPSEL
 	UNICORN_CFLAGS += -DUNICORN_HAS_MIPS64
@@ -47,8 +37,6 @@ ifneq (,$(findstring mips,$(UNICORN_ARCHS)))
 	UNICORN_TARGETS += mips64el-softmmu,
 endif
 ifneq (,$(findstring sparc,$(UNICORN_ARCHS)))
-	UC_TARGET_OBJ += $(call GENOBJ,sparc-softmmu)
-	UC_TARGET_OBJ += $(call GENOBJ,sparc64-softmmu)
 	UNICORN_CFLAGS += -DUNICORN_HAS_SPARC
 	UNICORN_TARGETS += sparc-softmmu,sparc64-softmmu,
 endif
@@ -206,7 +194,7 @@ qemu/config-host.h-timestamp:
 	./configure --cc="${CC}" --extra-cflags="$(UNICORN_CFLAGS)" --target-list="$(UNICORN_TARGETS)" ${UNICORN_QEMU_FLAGS}
 	printf "$(UNICORN_ARCHS)" > config.log
 	$(MAKE) -C qemu -j 4
-	$(eval UC_TARGET_OBJ += $$(wildcard qemu/util/*.o) $$(wildcard qemu/*.o) $$(wildcard qemu/qom/*.o) $$(wildcard qemu/hw/core/*.o) $$(wildcard qemu/qapi/*.o) $$(wildcard qemu/qobject/*.o))
+	$(eval UC_TARGET_OBJ += $$(shell find qemu/ -name "*.o" 2>dev/null))
 
 unicorn: $(LIBRARY) $(ARCHIVE)
 

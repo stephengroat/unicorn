@@ -60,19 +60,6 @@ AR = llvm-ar
 LDFLAGS := -fsanitize=address ${LDFLAGS}
 endif
 
-ifeq ($(CROSS),)
-CC ?= cc
-AR ?= ar
-RANLIB ?= ranlib
-STRIP ?= strip
-else
-CC = $(CROSS)-gcc
-AR = $(CROSS)-ar
-RANLIB = $(CROSS)-ranlib
-STRIP = $(CROSS)-strip
-GLIB = "-L/usr/$(CROSS)/lib/ -lglib-2.0"
-endif
-
 # Find GLIB
 ifndef GLIB
 GLIB = `pkg-config --libs glib-2.0`

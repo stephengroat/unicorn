@@ -3,6 +3,12 @@ CFLAGS += -L ../../ -I ../../include
 CFLAGS += -L ../../cmocka/src -I ../../cmocka/include
 LDLIBS += -lcmocka -lunicorn -lpthread -lrt
 
+UNAME_S := $(shell uname -s)
+
+ifneq ($(filter Darwin%,$(UNAME_S)),)
+LDLIBS := $(LDLIBS:-lrt=)
+endif
+
 EXECUTE_VARS = LD_LIBRARY_PATH=../../cmocka/src:../../ DYLD_LIBRARY_PATH=../../
 
 ifeq ($(UNICORN_ASAN),yes)

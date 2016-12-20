@@ -39,6 +39,8 @@ CFLAGS := $(CFLAGS:-fPIC=)
 LDFLAGS := $(LDFLAGS:-lrt=)
 BIN_EXT = .exe
 AR_EXT = lib
+else ifneq ($(filter Darwin%,$(UNAME_S)),)
+LDFLAGS := $(LDFLAGS:-lrt=)
 endif
 
 ifeq ($(UNICORN_STATIC),yes)

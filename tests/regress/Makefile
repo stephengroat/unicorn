@@ -1,5 +1,5 @@
 CFLAGS += -Wall -Werror -I../../include
-LDLIBS += -L../../ -lpthread -lm -lunicorn
+LDLIBS += -L../../ -lunicorn -lpthread -lrt -lm
 
 EXECUTE_VARS = LD_LIBRARY_PATH=../../cmocka/src:../../ DYLD_LIBRARY_PATH=../../
 

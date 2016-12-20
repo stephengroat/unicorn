@@ -1,7 +1,7 @@
 CFLAGS += -Wall -Werror -Wno-unused-function -g
 CFLAGS += -L ../../ -I ../../include
 CFLAGS += -L ../../cmocka/src -I ../../cmocka/include
-LDLIBS += -lcmocka -lunicorn
+LDLIBS += -lcmocka -lunicorn -lpthread -lrt
 
 EXECUTE_VARS = LD_LIBRARY_PATH=../../cmocka/src:../../ DYLD_LIBRARY_PATH=../../
 

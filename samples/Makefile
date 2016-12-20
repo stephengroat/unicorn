@@ -30,7 +30,6 @@ endif
 # Cygwin?
 ifneq ($(filter CYGWIN%,$(UNAME_S)),)
 CFLAGS := $(CFLAGS:-fPIC=)
-LDFLAGS := $(LDFLAGS:-lrt=)
 LDFLAGS += -lssp
 BIN_EXT = .exe
 AR_EXT = a

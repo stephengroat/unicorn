@@ -13,8 +13,7 @@ AR_EXT = a
 V ?= 0
 
 CFLAGS += -Wall -Werror -I../include
-LDFLAGS += -L$(LIBDIR) -lunicorn -lpthread -lm
-LDLIBS += -lpthread -lunicorn -lm -lrt
+LDFLAGS += -L$(LIBDIR) -lunicorn -lpthread -lm -lrt
 
 ifneq ($(CROSS),)
 CC = $(CROSS)gcc
@@ -31,7 +30,7 @@ endif
 # Cygwin?
 ifneq ($(filter CYGWIN%,$(UNAME_S)),)
 CFLAGS := $(CFLAGS:-fPIC=)
-LDLIBS += -lssp
+LDFLAGS += -lssp
 BIN_EXT = .exe
 AR_EXT = a
 # mingw?

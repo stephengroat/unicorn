@@ -5,11 +5,6 @@ include ../config.mk
 
 UNAME_S := $(shell uname -s)
 
-# Find GLIB
-ifndef GLIB
-GLIB = $(shell pkg-config --libs glib-2.0)
-endif
-
 LIBDIR = ..
 BIN_EXT =
 AR_EXT = a
@@ -18,8 +13,13 @@ AR_EXT = a
 V ?= 0
 
 CFLAGS += -Wall -Werror -I../include
-LDFLAGS += -L$(LIBDIR) -lunicorn -lpthread -lm $(GLIB)
-LDLIBS += -lpthread -lunicorn -lm $(GLIB)
+
+LDFLAGS += -L$(LIBDIR) -lunicorn -lpthread -lm
+ifeq ($(UNAME_S), Linux)
+LDFLAGS += -lrt
+endif
+
+LDLIBS += -lpthread -lunicorn -lm
 
 ifneq ($(CROSS),)
 CC = $(CROSS)gcc
@@ -43,7 +43,7 @@ AR_EXT = a
 else ifneq ($(filter MINGW%,$(UNAME_S)),)
 CFLAGS := $(CFLAGS:-fPIC=)
 BIN_EXT = .exe
-AR_EXT = lib
+AR_EXT = a
 endif
 
 ifeq ($(UNICORN_STATIC),yes)

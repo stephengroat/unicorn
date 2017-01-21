@@ -7,6 +7,7 @@ import pkg_resources
 import inspect
 import os.path
 import sys
+import weakref
 
 from . import x86_const, unicorn_const as uc
 
@@ -23,30 +24,51 @@ _lib = { 'darwin': 'libunicorn.dylib',
          'linux': 'libunicorn.so',
          'linux2': 'libunicorn.so' }
 
+
 # Windows DLL in dependency order
 _all_windows_dlls = (
     "libwinpthread-1.dll",
     "libgcc_s_seh-1.dll",
     "libgcc_s_dw2-1.dll",
     "libiconv-2.dll",
+    "libpcre-1.dll",
     "libintl-8.dll",
-    "libglib-2.0-0.dll",
 )
+
+_loaded_windows_dlls = set()
 
 def _load_win_support(path):
     for dll in _all_windows_dlls:
+        if dll in _loaded_windows_dlls:
+            continue
+
         lib_file = os.path.join(path, dll)
-        if os.path.exists(lib_file):
-            ctypes.cdll.LoadLibrary(lib_file)
+        if ('/' not in path and '\\' not in path) or os.path.exists(lib_file):
+            try:
+                #print('Trying to load Windows library', lib_file)
+                ctypes.cdll.LoadLibrary(lib_file)
+                #print('SUCCESS')
+                _loaded_windows_dlls.add(dll)
+            except OSError as e:
+                #print('FAIL to load %s' %lib_file, e)
+                continue
+
+# Initial attempt: load all dlls globally
+if sys.platform in ('win32', 'cygwin'):
+    _load_win_support('')
 
 def _load_lib(path):
     try:
         if sys.platform in ('win32', 'cygwin'):
             _load_win_support(path)
 
-        lib_file = os.path.join(path, _lib[sys.platform])
-        return ctypes.cdll.LoadLibrary(lib_file)
-    except OSError:
+        lib_file = os.path.join(path, _lib.get(sys.platform, 'libunicorn.so'))
+        #print('Trying to load shared library', lib_file)
+        dll = ctypes.cdll.LoadLibrary(lib_file)
+        #print('SUCCESS')
+        return dll
+    except OSError as e:
+        #print('FAIL to load %s' %lib_file, e)
         return None
 
 _uc = None
@@ -64,6 +86,9 @@ _path_list = [pkg_resources.resource_filename(__name__, 'lib'),
               distutils.sysconfig.get_python_lib(),
               "/usr/local/lib/" if sys.platform == 'darwin' else '/usr/lib64',
               os.environ['PATH']]
+
+#print(_path_list)
+#print("-" * 80)
 
 for _path in _path_list:
     _uc = _load_lib(_path)
@@ -102,7 +127,7 @@ _setup_prototype(_uc, "uc_mem_unmap", ucerr, uc_engine, ctypes.c_uint64, ctypes.
 _setup_prototype(_uc, "uc_mem_protect", ucerr, uc_engine, ctypes.c_uint64, ctypes.c_size_t, ctypes.c_uint32)
 _setup_prototype(_uc, "uc_query", ucerr, uc_engine, ctypes.c_uint32, ctypes.POINTER(ctypes.c_size_t))
 _setup_prototype(_uc, "uc_context_alloc", ucerr, uc_engine, ctypes.POINTER(uc_context))
-_setup_prototype(_uc, "uc_context_free", ucerr, uc_context)
+_setup_prototype(_uc, "uc_free", ucerr, ctypes.c_void_p)
 _setup_prototype(_uc, "uc_context_save", ucerr, uc_engine, uc_context)
 _setup_prototype(_uc, "uc_context_restore", ucerr, uc_engine, uc_context)
 
@@ -187,8 +212,27 @@ class uc_x86_xmm(ctypes.Structure):
         ("high_qword", ctypes.c_uint64),
     ]
 
+# Subclassing ref to allow property assignment.
+class UcRef(weakref.ref):
+    pass
+
+# This class tracks Uc instance destruction and releases handles.
+class UcCleanupManager(object):
+    def __init__(self):
+        self._refs = {}
+
+    def register(self, uc):
+        ref = UcRef(uc, self._finalizer)
+        ref._uch = uc._uch
+        self._refs[id(ref)] = ref
+
+    def _finalizer(self, ref):
+        del self._refs[id(ref)]
+        Uc.release_handle(ref._uch)
 
 class Uc(object):
+    _cleanup = UcCleanupManager()
+
     def __init__(self, arch, mode):
         # verify version compatibility with the core before doing anything
         (major, minor, _combined) = uc_version()
@@ -207,13 +251,13 @@ class Uc(object):
         self._callbacks = {}
         self._ctype_cbs = {}
         self._callback_count = 0
+        self._cleanup.register(self)
 
-    # destructor to be called automatically when object is destroyed.
-    def __del__(self):
-        if self._uch:
+    @staticmethod
+    def release_handle(uch):
+        if uch:
             try:
-                status = _uc.uc_close(self._uch)
-                self._uch = None
+                status = _uc.uc_close(uch)
                 if status != uc.UC_ERR_OK:
                     raise UcError(status)
             except:  # _uc might be pulled from under our feet
@@ -472,7 +516,7 @@ class SavedContext(object):
         self.pointer = pointer
 
     def __del__(self):
-        status = _uc.uc_context_free(self.pointer)
+        status = _uc.uc_free(self.pointer)
         if status != uc.UC_ERR_OK:
             raise UcError(status)
 

@@ -8,7 +8,8 @@ import (
 
 /*
 #cgo CFLAGS: -O3 -Wall -Werror -I../../../include
-#cgo LDFLAGS: -L../../../ -lunicorn -lglib-2.0
+#cgo LDFLAGS: -L../../../ -lunicorn
+#cgo linux LDFLAGS: -L../../../ -lunicorn -lrt
 #include <unicorn/unicorn.h>
 #include "uc.h"
 */
@@ -177,6 +178,7 @@ func (u *uc) MemRegions() ([]*MemRegion, error) {
 			Prot:  int(v.perms),
 		}
 	}
+	C.uc_free(unsafe.Pointer(regions))
 	return ret, nil
 }
 

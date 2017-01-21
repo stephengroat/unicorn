@@ -58,6 +58,9 @@ UNICORN_CFLAGS += -fPIC
 # Verbose output?
 V ?= 0
 
+# on MacOS, compile in Universal format by default
+MACOS_UNIVERSAL ?= yes
+
 ifeq ($(UNICORN_DEBUG),yes)
 CFLAGS += -g
 else
@@ -82,12 +85,6 @@ CC = $(CROSS)-gcc
 AR = $(CROSS)-ar
 RANLIB = $(CROSS)-ranlib
 STRIP = $(CROSS)-strip
-GLIB = "-L/usr/$(CROSS)/lib/ -lglib-2.0"
-endif
-
-# Find GLIB
-ifndef GLIB
-GLIB = `pkg-config --libs glib-2.0`
 endif
 
 ifeq ($(PKG_EXTRA),)
@@ -122,10 +119,12 @@ UNICORN_CFLAGS := $(UNICORN_CFLAGS:-fPIC=)
 # mingw?
 else ifneq ($(filter MINGW%,$(UNAME_S)),)
 EXT = dll
-AR_EXT = lib
+AR_EXT = a
 BIN_EXT = .exe
 UNICORN_QEMU_FLAGS += --disable-stack-protector
 UNICORN_CFLAGS := $(UNICORN_CFLAGS:-fPIC=)
+$(LIBNAME)_LDFLAGS += -Wl,--output-def,unicorn.def
+DO_WINDOWS_EXPORT = 1
 
 # Linux, Darwin
 else
@@ -183,9 +182,9 @@ LIBDATADIR ?= $(LIBDIR)
 
 ifndef USE_GENERIC_LIBDATADIR
 ifeq ($(UNAME_S), FreeBSD)
-LIBDATADIR = $(DESTDIR)$(PREFIX)/libdata
+LIBDATADIR = $(PREFIX)/libdata
 else ifeq ($(UNAME_S), DragonFly)
-LIBDATADIR = $(DESTDIR)$(PREFIX)/libdata
+LIBDATADIR = $(PREFIX)/libdata
 endif
 endif
 
@@ -195,7 +194,7 @@ else
 PKGCFGDIR ?= $(LIBDATADIR)/pkgconfig
 endif
 
-$(LIBNAME)_LDFLAGS += $(GLIB) -lm
+$(LIBNAME)_LDFLAGS += -lm
 
 .PHONY: all
 all: unicorn
@@ -210,7 +209,7 @@ qemu/config-host.h-timestamp:
 
 unicorn: $(LIBRARY) $(ARCHIVE)
 
-$(LIBRARY): qemu/config-host.h-timestamp uc.o list.o
+$(LIBRARY): qemu/config-host.h-timestamp
 ifeq ($(UNICORN_SHARED),yes)
 ifeq ($(V),0)
 	$(call log,GEN,$(LIBRARY))
@@ -220,9 +219,16 @@ else
 	$(CC) $(CFLAGS) -shared $(UC_TARGET_OBJ) uc.o list.o -o $(LIBRARY) $($(LIBNAME)_LDFLAGS)
 	-ln -sf $(LIBRARY) $(LIBRARY_SYMLINK)
 endif
+ifeq ($(DO_WINDOWS_EXPORT),1)
+ifneq ($(filter MINGW32%,$(UNAME_S)),)
+	cmd /c "windows_export.bat x86"
+else
+	cmd /c "windows_export.bat x64"
+endif
+endif
 endif
 
-$(ARCHIVE): qemu/config-host.h-timestamp uc.o list.o
+$(ARCHIVE): qemu/config-host.h-timestamp
 ifeq ($(UNICORN_STATIC),yes)
 ifeq ($(V),0)
 	$(call log,GEN,$(ARCHIVE))
@@ -282,6 +288,7 @@ dist:
 	git archive --format=zip --prefix=unicorn-$(DIST_VERSION)/ $(TAG) > unicorn-$(DIST_VERSION).zip
 
 
+# run "make header" whenever qemu/header_gen.py is modified
 header:
 	$(eval TARGETS := m68k arm aarch64 mips mipsel mips64 mips64el\
 		powerpc sparc sparc64 x86_64)
@@ -300,7 +307,7 @@ uninstall:
 clean:
 	$(MAKE) -C qemu clean
 	rm -rf *.d *.o
-	rm -rf lib$(LIBNAME)* $(LIBNAME)*.lib $(LIBNAME)*.dll cyg$(LIBNAME)*.dll
+	rm -rf lib$(LIBNAME)* $(LIBNAME)*.lib $(LIBNAME)*.dll $(LIBNAME)*.exp cyg$(LIBNAME)*.dll
 	$(MAKE) -C samples clean
 	$(MAKE) -C tests/unit clean
 

@@ -4,8 +4,7 @@
 #include "config-host.h"
 #include <stdarg.h>
 #include <stddef.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include "unicorn/platform.h"
 #include <sys/types.h>
 #ifdef __OpenBSD__
 #include <sys/signal.h>
@@ -18,7 +17,7 @@
 #define WEXITSTATUS(x) (x)
 #endif
 
-#include <sys/time.h>
+#include "unicorn/platform.h"
 
 #if defined(CONFIG_SOLARIS) && CONFIG_SOLARIS_VERSION < 10
 /* [u]int_fast*_t not in <sys/int_types.h> */
@@ -44,15 +43,19 @@ typedef signed int              int_fast16_t;
 #endif
 
 #ifndef container_of
+#ifndef _MSC_VER
 #define container_of(ptr, type, member) ({                      \
         const typeof(((type *) 0)->member) *__mptr = (ptr);     \
         (type *) ((char *) __mptr - offsetof(type, member));})
+#else
+#define container_of(ptr, type, member) ((type *)((char *)(ptr) -offsetof(type,member)))
+#endif
 #endif
 
 /* Convert from a base type to a parent type, with compile time checking.  */
 #ifdef __GNUC__
 #define DO_UPCAST(type, field, dev) ( __extension__ ( { \
-    char __attribute__((unused)) offset_must_be_zero[ \
+    char QEMU_UNUSED_VAR offset_must_be_zero[ \
         -offsetof(type, field)]; \
     container_of(dev, type, field);}))
 #else
@@ -101,7 +104,6 @@ typedef signed int              int_fast16_t;
 
 #define qemu_printf printf
 
-int qemu_daemon(int nochdir, int noclose);
 void *qemu_try_memalign(size_t alignment, size_t size);
 void *qemu_memalign(size_t alignment, size_t size);
 void *qemu_anon_ram_alloc(size_t size, uint64_t *align);
@@ -169,11 +171,6 @@ void qemu_anon_ram_free(void *ptr, size_t size);
 
 #endif
 
-int qemu_madvise(void *addr, size_t len, int advice);
-
-int qemu_open(const char *name, int flags, ...);
-int qemu_close(int fd);
-
 #if defined(__HAIKU__) && defined(__i386__)
 #define FMT_pid "%ld"
 #elif defined(WIN64)
@@ -181,8 +178,6 @@ int qemu_close(int fd);
 #else
 #define FMT_pid "%d"
 #endif
-
-int qemu_create_pidfile(const char *filename);
 
 #ifdef _WIN32
 static inline void qemu_timersub(const struct timeval *val1,
@@ -208,17 +203,6 @@ const char *qemu_get_version(void);
 
 void fips_set_state(bool requested);
 bool fips_get_state(void);
-
-/* Return a dynamically allocated pathname denoting a file or directory that is
- * appropriate for storing local state.
- *
- * @relative_pathname need not start with a directory separator; one will be
- * added automatically.
- *
- * The caller is responsible for releasing the value returned with g_free()
- * after use.
- */
-char *qemu_get_local_state_pathname(const char *relative_pathname);
 
 /* Get the saved exec dir.
  * Caller needs to release the returned string by g_free() */

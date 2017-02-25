@@ -2,7 +2,7 @@ language: c
 sudo: false
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install cmocka; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install cmocka android-ndk; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./install-cmocka-linux.sh; fi
 script:
   - make && make -C bindings/go && make -C bindings/go test && make test
@@ -12,7 +12,8 @@ compiler:
 os:
   - linux
   - osx
-addons:
-  apt:
-    packages:
-    # mingw-w64 packages too old in precise
+matrix:
+  include:
+    - os: osx
+      compiler: arm-linux-androideabi-gcc
+      env: NDKROOT=/home/username/android-ndk-r13 TOOLCHAINPATH=$NDKROOT/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin PATH=$TOOLCHAINPATH:$PATH SYSROOT=$NDKROOT/platforms/android-24/arch-arm

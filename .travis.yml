@@ -19,4 +19,4 @@ matrix:
   include:
     - os: osx
       compiler: arm-linux-androideabi-gcc
-      env: NDKROOT=/usr/local/opt/android-ndk TOOLCHAINPATH=$NDKROOT/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin PATH=$TOOLCHAINPATH:$PATH SYSROOT=$NDKROOT/platforms/android-24/arch-arm
+      env: NDKROOT=/usr/local/opt/android-ndk TOOLCHAINPATH=$NDKROOT/toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64/bin PATH=$TOOLCHAINPATH:$PATH SYSROOT=$NDKROOT/platforms/android-24/arch-arm

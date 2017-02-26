@@ -2,11 +2,9 @@ language: c
 sudo: false
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then travis_wait 20 brew install cmocka android-ndk; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then  brew install cmocka; fi
+  - if [[ ! -z "$NDKROOT" ]]; then travis_wait 20 brew install android-ndk; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./install-cmocka-linux.sh; fi
-android:
-  components:
-    - ndk
 script:
   - make && make -C bindings/go && make -C bindings/go test && make test
 compiler:

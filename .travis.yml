@@ -6,7 +6,7 @@ before_install:
   - if [[ ! -z "$NDKROOT" ]]; then travis_wait 20 brew install android-ndk; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./install-cmocka-linux.sh; fi
 script:
-  - CROSS=arm-linux-androideabi ${MAKE} make && make -C bindings/go && make -C bindings/go test && make test
+  - CROSS=arm-linux-androideabi make && make -C bindings/go && make -C bindings/go test && make test
 #compiler:
 #  - clang
 #  - gcc
